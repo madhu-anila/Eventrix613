@@ -33,9 +33,8 @@ app.use(
 // Parse JSON request bodies
 app.use(express.json());
 
-// ✅ Routes — MUST match what the frontend calls
-// Frontend uses:  <EVENT_SERVICE_URL>/events
-app.use('/events', eventRoutes);
+// ✅ Routes — now match frontend: <EVENT_SERVICE_URL>/api/events
+app.use('/api/events', eventRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {

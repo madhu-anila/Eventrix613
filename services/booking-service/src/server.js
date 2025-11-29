@@ -14,8 +14,8 @@ const MONGO_URI =
 // ✅ CORS whitelist (same as auth + event)
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://eventrix613.vercel.app', // Vercel frontend
-  'https://eventrix613-git-main-anilas-projects-dcd2cf5.vercel.app', // Vercel preview
+  'https://eventrix613.vercel.app', // ✅ Vercel frontend
+  'https://eventrix613-git-main-anilas-projects-dcd2cf5.vercel.app', // ✅ Vercel preview
   'https://wonderful-water-07646600f.3.azurestaticapps.net',
   'https://wonderful-water-07646600f-preview.eastus2.3.azurestaticapps.net'
 ];
@@ -30,16 +30,18 @@ app.use(
   })
 );
 
-// Parse JSON bodies
+// ✅ Parse JSON bodies
 app.use(express.json());
 
-// ✅ Routes — MUST match what the frontend calls
-// Frontend should call: <BOOKING_SERVICE_URL>/bookings/...
-app.use('/bookings', bookingRoutes);
+// ✅ Routes — MUST match frontend: <BOOKING_SERVICE_URL>/api/bookings
+app.use('/api/bookings', bookingRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'Booking service is running', timestamp: new Date() });
+  res.json({
+    status: 'Booking service is running',
+    timestamp: new Date()
+  });
 });
 
 // ✅ MongoDB connection + server start
