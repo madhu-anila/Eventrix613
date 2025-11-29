@@ -11,19 +11,32 @@ const app = express();
 const PORT = process.env.PORT || 4001;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/eventsphere-auth';
 
-// Middleware
-app.use(cors({
+// ✅ CORS options
+const corsOptions = {
   origin: [
     'http://localhost:3000',
+    'https://eventrix613.vercel.app', // ✅ your Vercel frontend
     'https://wonderful-water-07646600f.3.azurestaticapps.net',
     'https://wonderful-water-07646600f-preview.eastus2.3.azurestaticapps.net'
   ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
-}));
+};
+
+// ✅ Middleware
+app.use(cors(corsOptions));
+// ✅ Explicitly handle preflight
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
-// Routes
+// ✅ Routes
+// keep old prefix if anything still uses it
 app.use('/api/auth', authRoutes);
+// and ALSO expose the path your frontend is calling:
+app.use('/auth', authRoutes);
+
 app.use('/api/debug', debugRoutes);
 
 // Health check
