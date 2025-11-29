@@ -10,7 +10,9 @@ const app = express();
 
 const PORT = process.env.PORT || 4001;
 const MONGO_URI =
-  process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/eventsphere-auth';
+  process.env.MONGODB_URI ||
+  process.env.MONGO_URI ||
+  'mongodb://127.0.0.1:27017/eventsphere-auth';
 
 // ✅ CORS whitelist
 const allowedOrigins = [
