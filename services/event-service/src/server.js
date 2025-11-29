@@ -14,47 +14,45 @@ const MONGO_URI =
 // ✅ CORS whitelist
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://eventrix613.vercel.app', // ✅ Vercel production
+  'https://eventrix613.vercel.app', // Vercel frontend
+  'https://eventrix613-git-main-anilas-projects-dcd2cf5.vercel.app', // Vercel preview (if needed)
   'https://wonderful-water-07646600f.3.azurestaticapps.net',
   'https://wonderful-water-07646600f-preview.eastus2.3.azurestaticapps.net'
 ];
 
-// ✅ CORS middleware (before routes)
+// ✅ CORS middleware
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Postman / curl etc.
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
 
+// Parse JSON request bodies
 app.use(express.json());
 
-// ✅ Routes
-app.use('/api/events', eventRoutes);
+// ✅ Routes — MUST match what the frontend calls
+// Frontend uses:  <EVENT_SERVICE_URL>/events
+app.use('/events', eventRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'Event service is running',
-    timestamp: new Date()
-  });
+  res.json({ status: 'Event service is running', timestamp: new Date() });
 });
 
-// ✅ MongoDB connection
+// ✅ MongoDB connection + server start
 mongoose
   .connect(MONGO_URI)
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB (events)');
     app.listen(PORT, () => {
       console.log(`🚀 Event service running on port ${PORT}`);
     });
   })
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
+    console.error('❌ MongoDB connection error (events):', err);
     process.exit(1);
   });
 
