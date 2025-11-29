@@ -35,7 +35,7 @@ app.use(
 );
 
 // Handle preflight explicitly (safety)
-app.options('*', cors());
+//app.options('*', cors());
 
 app.use(express.json());
 
