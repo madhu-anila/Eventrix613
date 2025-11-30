@@ -34,7 +34,9 @@ app.use(
 app.use(express.json());
 
 // ✅ Routes — now match frontend: <EVENT_SERVICE_URL>/api/events
+// ✅ Routes — support both /api/events and /events
 app.use('/api/events', eventRoutes);
+app.use('/events', eventRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
