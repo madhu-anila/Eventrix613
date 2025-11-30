@@ -37,7 +37,6 @@ app.use(express.json());
 
 // ✅ Routes — support BOTH `/api/events` and `/events`
 app.use('/api/events', eventRoutes);
-app.use('/events', eventRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {

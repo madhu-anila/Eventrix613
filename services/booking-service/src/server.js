@@ -37,7 +37,6 @@ app.use(express.json());
 
 // ✅ Routes — support BOTH `/api/bookings` and `/bookings`
 app.use('/api/bookings', bookingRoutes);
-app.use('/bookings', bookingRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
