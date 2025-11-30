@@ -12,7 +12,7 @@ const verifyToken = async (req, res, next) => {
     }
 
     // Call auth-service to verify token
-    const response = await axios.get(`${AUTH_SERVICE_URL}/api/auth/verify`, {
+    const response = await axios.get(`${AUTH_SERVICE_URL}/auth/verify`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
