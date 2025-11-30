@@ -237,7 +237,7 @@ router.get('/analytics', verifyToken, async (req, res) => {
 
     const waitlistWithEvents = await Promise.all(waitlistByEvent.map(async entry => {
       try {
-        const eventResponse = await axios.get(`${EVENT_SERVICE_URL}/api/events/${entry._id}`);
+        const eventResponse = await axios.get(`${EVENT_SERVICE_URL}/events/${entry._id}`);
         return { ...entry, title: eventResponse.data.title };
       } catch (err) {
         return { ...entry, title: 'Unknown event' };

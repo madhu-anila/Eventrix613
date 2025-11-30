@@ -50,7 +50,7 @@ mongoose
     console.log('✅ Connected to MongoDB (bookings)');
     app.listen(PORT, () => {
       console.log(`🚀 Booking service running on port ${PORT}`);
-      console.log(`   Listening on /api/bookings and /bookings`);
+      console.log(`   Listening on /bookings`);
     });
   })
   .catch(err => {
