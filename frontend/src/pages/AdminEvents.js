@@ -10,7 +10,7 @@ const formatTime = (timeStr) => {
   if (/AM|PM/i.test(timeStr)) return timeStr;
   
   const [hours, minutes] = timeStr.split(':');
-  let hour = parseInt(hours);
+  let hour = parseInt(hours, 10);
   const period = hour >= 12 ? 'PM' : 'AM';
   
   if (hour === 0) hour = 12;
@@ -42,12 +42,31 @@ function AdminEvents() {
     fetchEvents();
   }, []);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('You must be logged in as an admin to manage events');
+      throw new Error('No auth token found');
+    }
+    return {
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(`${API_CONFIG.event}/events`);
-      setEvents(response.data.events);
+      const headers = getAuthHeaders();
+      const response = await axios.get(`${API_CONFIG.event}/events`, {
+        headers,
+      });
+      setEvents(response.data.events || response.data);
     } catch (err) {
-      console.error('Error fetching events:', err);
+      console.error('Error fetching events:', err.response?.status, err.response?.data || err.message);
+      if (err.response?.status === 401) {
+        toast.error('Unauthorized to fetch events. Please log in again.');
+      } else {
+        toast.error('Failed to load events');
+      }
     }
   };
 
@@ -91,7 +110,7 @@ function AdminEvents() {
       return;
     }
 
-    if (!formData.price || formData.price < 0) {
+    if (formData.price === '' || formData.price < 0) {
       toast.error('Price cannot be negative');
       return;
     }
@@ -102,8 +121,8 @@ function AdminEvents() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      
+      const headers = getAuthHeaders();
+
       // Category-specific placeholder images
       const categoryImages = {
         conference: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop',
@@ -126,7 +145,7 @@ function AdminEvents() {
         await axios.put(
           `${API_CONFIG.event}/events/${editingEventId}`,
           eventData,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers }
         );
         toast.success('Event updated successfully!');
       } else {
@@ -134,14 +153,14 @@ function AdminEvents() {
         await axios.post(
           `${API_CONFIG.event}/events`,
           eventData,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers }
         );
         toast.success('Event created successfully!');
       }
       
       setShowForm(false);
       setEditingEventId(null);
-      fetchEvents();
+      await fetchEvents();
       setFormData({
         title: '',
         description: '',
@@ -155,7 +174,12 @@ function AdminEvents() {
         imageUrl: ''
       });
     } catch (err) {
-      toast.error(err.response?.data?.error || `Failed to ${editingEventId ? 'update' : 'create'} event`);
+      console.error('Error creating/updating event:', err.response?.status, err.response?.data || err.message);
+      if (err.response?.status === 401) {
+        toast.error('Unauthorized. Please log in again.');
+      } else {
+        toast.error(err.response?.data?.error || `Failed to ${editingEventId ? 'update' : 'create'} event`);
+      }
     }
   };
 
@@ -169,7 +193,7 @@ function AdminEvents() {
     const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
     if (match) {
       let [, hours, minutes, period] = match;
-      hours = parseInt(hours);
+      hours = parseInt(hours, 10);
       
       if (period.toUpperCase() === 'PM' && hours !== 12) {
         hours += 12;
@@ -227,16 +251,21 @@ function AdminEvents() {
     if (!deleteEventId) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const headers = getAuthHeaders();
       await axios.delete(`${API_CONFIG.event}/events/${deleteEventId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers
       });
       toast.success('Event deleted successfully!');
       setShowDeleteModal(false);
       setDeleteEventId(null);
-      fetchEvents();
+      await fetchEvents();
     } catch (err) {
-      toast.error('Failed to delete event');
+      console.error('Error deleting event:', err.response?.status, err.response?.data || err.message);
+      if (err.response?.status === 401) {
+        toast.error('Unauthorized to delete event. Please log in again.');
+      } else {
+        toast.error('Failed to delete event');
+      }
       setShowDeleteModal(false);
     }
   };
