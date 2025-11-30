@@ -1,3 +1,4 @@
+// src/server.js (Event Service)
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -9,13 +10,14 @@ const app = express();
 
 const PORT = process.env.PORT || 4002;
 const MONGO_URI =
-  process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/eventsphere-events';
+  process.env.MONGO_URI ||
+  'mongodb://127.0.0.1:27017/eventsphere-events';
 
 // ✅ CORS whitelist
 const allowedOrigins = [
   'http://localhost:3000',
   'https://eventrix613.vercel.app', // Vercel frontend
-  'https://eventrix613-git-main-anilas-projects-dcd2cf5.vercel.app', // Vercel preview (if needed)
+  'https://eventrix613-git-main-anilas-projects-dcd2cf5.vercel.app', // Vercel preview
   'https://wonderful-water-07646600f.3.azurestaticapps.net',
   'https://wonderful-water-07646600f-preview.eastus2.3.azurestaticapps.net'
 ];
@@ -30,11 +32,10 @@ app.use(
   })
 );
 
-// Parse JSON request bodies
+// Parse JSON bodies
 app.use(express.json());
 
-// ✅ Routes — now match frontend: <EVENT_SERVICE_URL>/api/events
-// ✅ Routes — support both /api/events and /events
+// ✅ Routes — support BOTH `/api/events` and `/events`
 app.use('/api/events', eventRoutes);
 app.use('/events', eventRoutes);
 
@@ -50,6 +51,7 @@ mongoose
     console.log('✅ Connected to MongoDB (events)');
     app.listen(PORT, () => {
       console.log(`🚀 Event service running on port ${PORT}`);
+      console.log(`   Listening on /api/events and /events`);
     });
   })
   .catch(err => {
