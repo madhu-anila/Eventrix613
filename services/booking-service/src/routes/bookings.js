@@ -12,7 +12,7 @@ const generateTransactionId = () => `TXN${Date.now()}${Math.floor(Math.random() 
 
 const promoteWaitlistIfPossible = async (eventId, availableSeatsHint) => {
   try {
-    const eventResponse = await axios.get(`${EVENT_SERVICE_URL}/api/events/${eventId}`);
+    const eventResponse = await axios.get(`${EVENT_SERVICE_URL}/events/${eventId}`);
     const event = eventResponse.data;
     let availableSeats = typeof availableSeatsHint === 'number' ? availableSeatsHint : event.availableSeats;
 
@@ -37,7 +37,7 @@ const promoteWaitlistIfPossible = async (eventId, availableSeatsHint) => {
 
       availableSeats -= waitlisted.numberOfTickets;
 
-      await axios.patch(`${EVENT_SERVICE_URL}/api/events/${eventId}/seats`, {
+      await axios.patch(`${EVENT_SERVICE_URL}/events/${eventId}/seats`, {
         seatsToBook: waitlisted.numberOfTickets
       });
 
@@ -59,7 +59,7 @@ router.post('/', verifyToken, async (req, res) => {
 
     let eventResponse;
     try {
-      eventResponse = await axios.get(`${EVENT_SERVICE_URL}/api/events/${eventId}`);
+      eventResponse = await axios.get(`${EVENT_SERVICE_URL}/events/${eventId}`);
     } catch (err) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -136,7 +136,7 @@ router.post('/', verifyToken, async (req, res) => {
     booking.transactionId = generateTransactionId();
 
     try {
-      await axios.patch(`${EVENT_SERVICE_URL}/api/events/${eventId}/seats`, {
+      await axios.patch(`${EVENT_SERVICE_URL}/events/${eventId}/seats`, {
         seatsToBook: numberOfTickets
       });
     } catch (err) {
@@ -322,7 +322,7 @@ router.patch('/:id/cancel', verifyToken, async (req, res) => {
     let restoredAvailability;
     if (wasConfirmed) {
       try {
-        const seatResponse = await axios.patch(`${EVENT_SERVICE_URL}/api/events/${booking.eventId}/seats`, {
+        const seatResponse = await axios.patch(`${EVENT_SERVICE_URL}/events/${booking.eventId}/seats`, {
           seatsToBook: -booking.numberOfTickets
         });
         restoredAvailability = seatResponse.data?.availableSeats;

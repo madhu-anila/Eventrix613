@@ -120,7 +120,7 @@ router.put('/:id', verifyToken, isAdmin, async (req, res) => {
     
     // Update booking records with new event details
     try {
-      await axios.patch(`${BOOKING_SERVICE_URL}/api/bookings/event/${req.params.id}/sync`, {
+      await axios.patch(`${BOOKING_SERVICE_URL}/bookings/event/${req.params.id}/sync`, {
         eventTitle: event.title,
         eventDate: event.date,
         eventVenue: event.venue,
@@ -152,7 +152,7 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
     
     // Cancel all bookings for this event
     try {
-      await axios.patch(`${BOOKING_SERVICE_URL}/api/bookings/event/${req.params.id}/cancel-all`);
+      await axios.patch(`${BOOKING_SERVICE_URL}/bookings/event/${req.params.id}/cancel-all`);
     } catch (bookingErr) {
       console.error('Failed to cancel bookings:', bookingErr.message);
       // Continue even if booking cancellation fails
@@ -212,7 +212,7 @@ router.post('/:id/feedback', verifyToken, async (req, res) => {
     }
 
     try {
-      const bookingResponse = await axios.get(`${BOOKING_SERVICE_URL}/api/bookings/event/${req.params.id}/me`, {
+      const bookingResponse = await axios.get(`${BOOKING_SERVICE_URL}/bookings/event/${req.params.id}/me`, {
         headers: { Authorization: req.headers.authorization }
       });
       if (!bookingResponse.data.hasBooking || bookingResponse.data.bookingStatus === 'cancelled') {
