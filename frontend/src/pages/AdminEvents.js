@@ -4,55 +4,18 @@ import { toast } from 'react-toastify';
 import API_CONFIG from '../config/api';
 import './AdminEvents.css';
 
-// Normalize base URL for events so it NEVER uses /api
-// Examples:
-//  - API_CONFIG.event = 'https://aware-gratitude-production.up.railway.app'
-//      -> EVENTS_BASE_URL = 'https://aware-gratitude-production.up.railway.app/events'
-//  - API_CONFIG.event = 'https://aware-gratitude-production.up.railway.app/api'
-//      -> EVENTS_BASE_URL = 'https://aware-gratitude-production.up.railway.app/events'
+// ✅ FORCE NON-/api EVENTS URL
 const EVENTS_BASE_URL = (() => {
   let base = API_CONFIG.event || '';
 
-  // Remove any trailing slash
-  if (base.endsWith('/')) {
-    base = base.slice(0, -1);
-  }
+  if (base.endsWith('/')) base = base.slice(0, -1);
+  if (base.endsWith('/api')) base = base.slice(0, -4);
 
-  // If someone accidentally puts /api in the env, strip it
-  if (base.endsWith('/api')) {
-    base = base.slice(0, -4); // remove "/api"
-  }
-
-  // If it already ends with /events, just use it
-  if (base.endsWith('/events')) {
-    return base;
-  }
-
-  // Otherwise, always call /events on that base
   return `${base}/events`;
 })();
 
-// Utility function to convert 24-hour to 12-hour format
-const formatTime = (timeStr) => {
-  if (!timeStr) return '';
-  if (/AM|PM/i.test(timeStr)) return timeStr;
-
-  const [hours, minutes] = timeStr.split(':');
-  let hour = parseInt(hours, 10);
-  const period = hour >= 12 ? 'PM' : 'AM';
-
-  if (hour === 0) hour = 12;
-  else if (hour > 12) hour -= 12;
-
-  return `${hour}:${minutes} ${period}`;
-};
-
 function AdminEvents() {
   const [events, setEvents] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteEventId, setDeleteEventId] = useState(null);
-  const [editingEventId, setEditingEventId] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -63,80 +26,101 @@ function AdminEvents() {
     capacity: '',
     price: '',
     organizer: '',
-    imageUrl: ''
   });
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
   const getAuthHeaders = () => {
-    const token =
-      localStorage.getItem('token') ||
-      localStorage.getItem('authToken') ||
-      localStorage.getItem('accessToken');
-
+    const token = localStorage.getItem('token');
     if (!token) {
-      toast.error('You must be logged in as an admin to manage events');
-      throw new Error('No auth token found');
+      toast.error('You must be logged in');
+      throw new Error('No token');
     }
-
-    return {
-      Authorization: `Bearer ${token}`,
-    };
+    return { Authorization: `Bearer ${token}` };
   };
 
   const fetchEvents = async () => {
     try {
       const headers = getAuthHeaders();
-      const response = await axios.get(EVENTS_BASE_URL, { headers });
-      setEvents(response.data.events || response.data);
+      const res = await axios.get(EVENTS_BASE_URL, { headers });
+      setEvents(res.data.events || []);
     } catch (err) {
-      console.error(
-        'Error fetching events:',
-        err.response?.status,
-        err.response?.data || err.message
-      );
-      if (err.response?.status === 401) {
-        toast.error('Unauthorized to fetch events. Please log in again as admin.');
-      } else {
-        toast.error('Failed to load events');
-      }
+      console.error(err);
+      toast.error('Failed to fetch events');
     }
   };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
-    if (!formData.title || formData.title.length < 3) {
-      toast.error('Event title must be at least 3 characters');
-      return;
+    try {
+      const headers = getAuthHeaders();
+      await axios.post(EVENTS_BASE_URL, formData, { headers });
+      toast.success('Event created');
+      fetchEvents();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to create event');
     }
-    if (!formData.description || formData.description.length < 10) {
-      toast.error('Description must be at least 10 characters');
-      return;
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const headers = getAuthHeaders();
+      await axios.delete(`${EVENTS_BASE_URL}/${id}`, { headers });
+      toast.success('Event deleted');
+      fetchEvents();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to delete event');
     }
-    if (!formData.venue || formData.venue.length < 3) {
-      toast.error('Venue must be at least 3 characters');
-      return;
-    }
-    if (!formData.date) {
-      toast.error('Please select an event date');
-      return;
-    }
-    const selectedDate = new Date(formData.date);
-    if (selectedDate <= new Date()) {
-      toast.error('Event date must be in the future');
-      return;
-    }
-    if (!formData.time) {
-      toast.error('Please select an event time');
-      return;
-    }
-    if (!formData.capacity || formData.capacity < 1) {
-      toast.error('Capacity must be at least 1');
-      return;
-    }
-    if (formData.price === '' || formData.price < 0) {
-      toast.err
+  };
+
+  return (
+    <div className="admin-events">
+      <h2>Create Event</h2>
+
+      <form onSubmit={handleSubmit}>
+        <input placeholder="Title" onChange={e => setFormData({ ...formData, title: e.target.value })} />
+        <input placeholder="Description" onChange={e => setFormData({ ...formData, description: e.target.value })} />
+        <input placeholder="Venue" onChange={e => setFormData({ ...formData, venue: e.target.value })} />
+        <input type="date" onChange={e => setFormData({ ...formData, date: e.target.value })} />
+        <input type="time" onChange={e => setFormData({ ...formData, time: e.target.value })} />
+        <input type="number" placeholder="Capacity" onChange={e => setFormData({ ...formData, capacity: e.target.value })} />
+        <input type="number" placeholder="Price" onChange={e => setFormData({ ...formData, price: e.target.value })} />
+        <input placeholder="Organizer" onChange={e => setFormData({ ...formData, organizer: e.target.value })} />
+
+        <button type="submit">Create Event</button>
+      </form>
+
+      <h2>Events List</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Venue</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map(ev => (
+            <tr key={ev._id}>
+              <td>{ev.title}</td>
+              <td>{ev.venue}</td>
+              <td>{new Date(ev.date).toLocaleDateString()}</td>
+              <td>
+                <button onClick={() => handleDelete(ev._id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default AdminEvents;
