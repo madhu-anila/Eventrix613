@@ -35,22 +35,27 @@ app.use(
 // Parse JSON bodies
 app.use(express.json());
 
-// ✅ Routes — support BOTH `/api/events` and `/events`
-app.use('/api/events', eventRoutes);
+// ✅ Routes — ONLY `/events` now
+// Router defines GET '/', POST '/', etc. so full paths become:
+//   GET    /events
+//   POST   /events
+//   PUT    /events/:id
+//   DELETE /events/:id
+app.use('/events', eventRoutes);
 
-// ✅ Health check
+// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'Event service is running', timestamp: new Date() });
 });
 
-// ✅ MongoDB connection + server start
+// MongoDB connection + server start
 mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB (events)');
     app.listen(PORT, () => {
       console.log(`🚀 Event service running on port ${PORT}`);
-      console.log(`   Listening on /api/events and /events`);
+      console.log('   Listening on /events');
     });
   })
   .catch(err => {
