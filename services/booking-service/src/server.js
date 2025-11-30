@@ -35,8 +35,8 @@ app.use(
 // Parse JSON bodies
 app.use(express.json());
 
-// ✅ Routes — support BOTH `/api/bookings` and `/bookings`
-app.use('/api/bookings', bookingRoutes);
+// ✅ Routes —`/bookings`
+app.use('/bookings', bookingRoutes);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
