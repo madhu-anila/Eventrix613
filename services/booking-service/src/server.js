@@ -60,7 +60,6 @@
 
 // module.exports = app;
 
-// src/server.js (Booking Service)
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -75,28 +74,26 @@ const MONGO_URI =
   process.env.MONGO_URI ||
   'mongodb://127.0.0.1:27017/eventsphere-bookings';
 
-// 🔐 CORS — for now, allow ALL origins so we can debug easily.
-// We can tighten this later once everything works.
+// ✅ Allow all origins for now (we can restrict later)
 app.use(cors());
-app.options('*', cors()); // handle preflight
+
+// ❌ REMOVE this line (it causes the PathError)
+// app.options('*', cors());
 
 // Parse JSON request bodies
 app.use(express.json());
 
-// Booking routes: all booking endpoints live under /bookings
+// Booking routes
 app.use('/bookings', bookingRoutes);
 
-// Simple root endpoint (quick sanity check)
 app.get('/', (req, res) => {
   res.json({ message: 'Booking service root is alive' });
 });
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'Booking service running', timestamp: new Date() });
 });
 
-// MongoDB connection + start server
 mongoose
   .connect(MONGO_URI)
   .then(() => {
