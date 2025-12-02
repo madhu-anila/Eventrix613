@@ -13,30 +13,45 @@ const MONGO_URI =
   process.env.MONGO_URI ||
   'mongodb://127.0.0.1:27017/eventsphere-bookings';
 
-// ✅ CORS whitelist (same as other services)
+// ✅ CORS whitelist (all front-end URLs that call this service)
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://eventrix613.vercel.app', // Vercel frontend
+  'https://eventrix613.vercel.app', // main Vercel frontend
   'https://eventrix613-git-main-anilas-projects-dcd2cf5.vercel.app', // Vercel preview
   'https://wonderful-water-07646600f.3.azurestaticapps.net',
   'https://wonderful-water-07646600f-preview.eastus2.3.azurestaticapps.net'
 ];
 
-// ✅ CORS middleware
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  })
-);
+// ✅ CORS options: dynamic origin check + OPTIONS handling
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow server-to-server tools (no origin) and whitelisted origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`❌ CORS blocked for origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// ✅ Apply CORS before anything else
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // preflight
 
 // Parse JSON bodies
 app.use(express.json());
 
-// ✅ Routes —`/bookings`
+// ✅ Routes — `/bookings`
 app.use('/bookings', bookingRoutes);
+
+// Simple root route (for quick sanity check)
+app.get('/', (req, res) => {
+  res.json({ message: 'Booking service root is alive' });
+});
 
 // ✅ Health check
 app.get('/health', (req, res) => {
