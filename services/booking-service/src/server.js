@@ -75,41 +75,18 @@ const MONGO_URI =
   process.env.MONGO_URI ||
   'mongodb://127.0.0.1:27017/eventsphere-bookings';
 
-// ✅ All frontends that should be allowed to call bookings
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://eventrix613.vercel.app',
-  'https://eventrix613-git-main-anilas-projects-dcd2cf5.vercel.app',
-  'https://wonderful-water-07646600f.3.azurestaticapps.net',
-  'https://wonderful-water-07646600f-preview.eastus2.3.azurestaticapps.net'
-];
+// 🔐 CORS — for now, allow ALL origins so we can debug easily.
+// We can tighten this later once everything works.
+app.use(cors());
+app.options('*', cors()); // handle preflight
 
-// ✅ CORS middleware (MUST be before routes)
-const corsOptions = {
-  origin: (origin, callback) => {
-    // origin is undefined for tools like curl / Postman, allow that
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('❌ CORS blocked for origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // handle preflight
-
-// ✅ Body parser
+// Parse JSON request bodies
 app.use(express.json());
 
-// ✅ Booking routes: /bookings
+// Booking routes: all booking endpoints live under /bookings
 app.use('/bookings', bookingRoutes);
 
-// Simple root endpoint
+// Simple root endpoint (quick sanity check)
 app.get('/', (req, res) => {
   res.json({ message: 'Booking service root is alive' });
 });
@@ -119,7 +96,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'Booking service running', timestamp: new Date() });
 });
 
-// ✅ MongoDB connection + start server
+// MongoDB connection + start server
 mongoose
   .connect(MONGO_URI)
   .then(() => {
